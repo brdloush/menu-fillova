@@ -1,14 +1,14 @@
 (ns menu-fillova.core
   (:gen-class) 
   (:require [babashka.curl :as curl]
-             [babashka.fs :as fs]
-             [babashka.process :as p]
-             [clojure.java.io :as io]
-             [clojure.string :as str]
-             [hiccup2.core :as h]
-             [org.httpkit.server :as http]
-             [hickory.core :as hickory]
-             [hickory.select :as s]))
+            [babashka.fs :as fs]
+            [babashka.process :as p]
+            [clojure.java.io :as io]
+            [clojure.string :as str]
+            [hiccup2.core :as h]
+            [org.httpkit.server :as http]
+            [hickory.core :as hickory]
+            [hickory.select :as s]))
 
 (def port 8080)
 
