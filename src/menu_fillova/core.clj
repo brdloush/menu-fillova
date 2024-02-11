@@ -1,20 +1,16 @@
-#!/usr/bin/env -S bb -cp ./examples
-(ns menu-fillova
+(ns menu-fillova.core
+  (:gen-class) 
   (:require [babashka.curl :as curl]
-            [babashka.fs :as fs]
-            [babashka.pods :as pods]
-            [babashka.process :as p]
-            [clojure.java.io :as io]
-            [clojure.string :as str]
-            [hiccup2.core :as h]
-            [org.httpkit.server :as http]))
+             [babashka.fs :as fs]
+             [babashka.process :as p]
+             [clojure.java.io :as io]
+             [clojure.string :as str]
+             [hiccup2.core :as h]
+             [org.httpkit.server :as http]
+             [hickory.core :as hickory]
+             [hickory.select :as s]))
 
 (def port 8080)
-
-(pods/load-pod 'retrogradeorbit/bootleg "0.1.9")
-
-(require '[pod.retrogradeorbit.bootleg.utils :refer [convert-to]]
-         '[pod.retrogradeorbit.hickory.select :as s])
 
 (defonce compose-tmp (name (gensym "compose-")))
 
@@ -24,12 +20,19 @@
   (-> (curl/get base-url)
       :body
       str/trim
-      (convert-to :hickory)))
+      (hickory/parse)
+      (hickory/as-hickory)))
 
 (defn extract-week-title-variant-1 [menu-hickory]
   (->> menu-hickory
        (s/select (s/tag :h1))
        first :content first :content first))
+
+(comment
+  (def menu-hickory (download-menu-hickory!))
+  (extract-week-title-variant-1 menu-hickory)
+  ;; => "Jídelníček od 12.2. do 16.2.2024"
+  )
 
 (defn extract-week-title-variant-2 [menu-hickory]
   (-> (->> menu-hickory
@@ -47,8 +50,8 @@
 
 (defn extract-days [cleaned-up-lunch-rows-strings]
   (let [singleline-text (->> cleaned-up-lunch-rows-strings
-                        (interleave (repeat "\n"))
-                        (apply str))]
+                             (interleave (repeat "\n"))
+                             (apply str))]
     {:monday (second (re-find #"(?is)(Pondělí.+)Úterý." singleline-text))
      :tuesday (second (re-find #"(?is)(Úterý.+)Středa.+" singleline-text))
      :wednesday (second (re-find #"(?is)(Středa.+)Čtvrtek.+" singleline-text))
@@ -69,7 +72,7 @@
            (map str/trim)
            (map #(str/replace % #"\d[0-9abcde,]+$" "")))))
 
-(defn make-model [menu-hickory] 
+(defn make-model [menu-hickory]
   (let [title (extract-week-title menu-hickory)
         cleaned-up-lunch-rows (cleanup-lunch-rows menu-hickory)]
     {:week-title title
@@ -77,7 +80,7 @@
 
 (defn make-day-names-bold [s]
   (reduce (fn [acc i]
-            (str/replace acc (re-pattern i) (str "<b>" i "</b>"))) 
+            (str/replace acc (re-pattern i) (str "<b>" i "</b>")))
           s
           ["Pondělí" "Úterý" "Středa" "Čtvrtek" "Pátek"]))
 
@@ -87,14 +90,13 @@
 (defn postprocess-day-text [s]
   (make-day-names-bold s))
 
-
 (defn render-pango [{:keys [week-title days] :as _model}]
   [:span
    [:span {:font_size 22000} week-title]
    [:span "\n"]
 
    [:span (str "generated @" (current-time))]
-   [:span 
+   [:span
     (map (fn [[_day-kw day-text]]
            [:span
             [:span {:font_size 25000} "\n"]
@@ -113,7 +115,7 @@
             (str "pango:" (h/html (render-pango (make-model menu-hickory))))
             "-bordercolor" "white" "-border" "30"
             pango-path)
-      
+
       (println "Writing result output to: " output-path)
       (p/sh "montage" pango-path
             "-tile" "x2" "-mode" "concatenate"
@@ -139,20 +141,20 @@
   (show-on-kindle)
   nil)
 
-(comment 
+(comment
   (go))
 
 (defn handler [_req]
-  {:status 200 
+  {:status 200
    :body (let [_ (compose-file)]
            (io/file "output/composition.png"))})
 
 (defonce server (atom nil))
-  
+
 (defn start-server [port]
   (if-not @server
-    (do 
-      (println "Starting http server on port" port) 
+    (do
+      (println "Starting http server on port" port)
       (reset! server
               (http/run-server
                #'handler
@@ -169,19 +171,10 @@
         :stopped)
     :not-running))
 
-(defn running-via-babashka-cli []
-  (= *file* (System/getProperty "babashka.file")))
-
-(if-not (running-via-babashka-cli)
-  (do (println "Welcome to the REPL. I'll generate the image for you once.")
-      (future (compose-file)
-              (println "Image file regenerated"))
-      nil)
-  (do 
-    (start-server port) 
-    (deref (promise))))
-
 (comment
   (start-server port)
-  (stop-server)
-  )
+  (stop-server))
+
+(defn -main [& _args]
+  (start-server port)
+  (deref (promise)))

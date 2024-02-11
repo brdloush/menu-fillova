@@ -7,6 +7,7 @@ Spawns a babashka http server on port 8080. Any incoming request to that URL re-
 ## Building
 
 ```bash
+clojure -T:build uber
 docker build -t menu-fillova .  
 ```
 
