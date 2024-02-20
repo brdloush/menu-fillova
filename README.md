@@ -2,7 +2,7 @@
 
 Parses a rather weird HTML page of meal menu from **Mateřská škola, Praha 4, Fillova** and creates a Kindle 3 Wifi-friendly PNG image out of it.
 
-Spawns a babashka http server on port 8080. Any incoming request to that URL re-downloads and reproceses the file. No caching.
+Spawns a clojure http server on port 8080. Any incoming request to that URL re-downloads and reproceses the file. No caching.
 
 ## Building
 
