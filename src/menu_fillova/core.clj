@@ -14,7 +14,7 @@
 
 (defonce compose-tmp (name (gensym "compose-")))
 
-(def base-url "https://www.ms-fillova.cz/jidelnicek1-stary")
+(def base-url "https://www.ms-fillova.cz/jidelnicek2-stary")
 
 (defn download-menu-hickory! []
   (-> (curl/get base-url)
@@ -96,6 +96,7 @@
    [:span "\n"]
 
    [:span (str "generated @" (current-time))]
+   [:span "\n"]
    [:span
     (map (fn [[_day-kw day-text]]
            [:span
