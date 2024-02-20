@@ -88,7 +88,7 @@
            (remove #(re-matches #"^\n.+" %))
            (map #(str/replace % " " "")) 
            (map #(str/replace % #"\d[0-9abcde, ]+$" ""))
-           (map #(str/replace % #"(svač.:).+$" ""))
+           (map #(str/replace % #"(svač.?:).+$" ""))
            (map #(str/replace % #"(oběd:)" ""))
            (map str/trim)
            (remove #(= "" %)))))
