@@ -1,14 +1,23 @@
 (ns menu-fillova.core
   (:gen-class)
-  (:require [babashka.curl :as curl]
-            [babashka.fs :as fs]
-            [babashka.process :as p]
-            [clojure.java.io :as io]
-            [clojure.string :as str]
-            [hiccup2.core :as h]
-            [org.httpkit.server :as http]
-            [hickory.core :as hickory]
-            [hickory.select :as s]))
+  (:require
+   [babashka.curl :as curl]
+   [babashka.fs :as fs]
+   [babashka.process :as p]
+   [clojure.java.io :as io]
+   [clojure.string :as str]
+   [hiccup2.core :as h]
+   [hickory.core :as hickory]
+   [hickory.select :as s]
+   [org.httpkit.server :as http])
+  (:import
+   [java.time
+    DayOfWeek
+    LocalDate
+    LocalTime
+    ZoneId
+    ZoneOffset]
+   [java.util Date]))
 
 (def port 8080)
 
@@ -52,19 +61,38 @@
        second
        parse-czech-date))
 
-(defn download-newest-menu [menu-urls]
-  (->> (pmap
-        (fn [url]
-          (let [menu-hickory (download-menu-hickory! url)
-                week-title (extract-week-title menu-hickory)
-                until-date (extract-until-date week-title)]
-            {:url url
-             :menu-hickory menu-hickory
-             :week-title week-title
-             :until-date until-date}))
-        menu-urls)
-       (sort-by (comp #(.getTime %) :until-date) >)
-       first))
+(defn is-inst-between? [inst low-inst high-inst]
+  (->> [low-inst inst high-inst]
+       (map #(.getTime %))
+       (apply <)))
+
+(defn current-week-inst-ranges! []
+  (let [now-inst (.toInstant (Date.))
+        now-ld (LocalDate/ofInstant now-inst ZoneOffset/UTC)]
+    [(-> now-ld (.with DayOfWeek/MONDAY) .atStartOfDay (.atZone (ZoneId/of "Europe/Prague")) .toInstant Date/from)
+     (-> now-ld (.with DayOfWeek/SUNDAY) (.atTime LocalTime/MAX) (.atZone (ZoneId/of "Europe/Prague")) .toInstant Date/from)]))
+
+(let [now-inst (.toInstant (Date.))
+      now-ld (LocalDate/ofInstant now-inst ZoneOffset/UTC)]
+  (-> now-ld (.with DayOfWeek/MONDAY) .atStartOfDay (.atZone (ZoneId/of "Europe/Prague")) .toInstant Date/from))
+
+(defn download-current-menu [menu-urls]
+  (let [is-within-this-week (let [[week-start-inst week-end-inst] (current-week-inst-ranges!)]
+                              (fn [inst]
+                                (is-inst-between? inst week-start-inst week-end-inst)))]
+    (->> (pmap
+           (fn [url]
+             (let [menu-hickory (download-menu-hickory! url)
+                   week-title (extract-week-title menu-hickory)
+                   until-date (extract-until-date week-title)]
+               {:url url
+                :menu-hickory menu-hickory
+                :week-title week-title
+                :until-date until-date}))
+           menu-urls)
+         (filter (fn [{:keys [until-date]}]
+                   (is-within-this-week until-date)))
+         first)))
 
 (defn extract-days [cleaned-up-lunch-rows-strings]
   (let [singleline-text (->> cleaned-up-lunch-rows-strings
@@ -83,10 +111,10 @@
            (map #(-> % :content first))
            (remove #(re-matches #"^[  ]+$" %))
            (remove #(re-matches #".*alergeny.*" %))
-           (remove #(re-matches #".*Změna jídelníčku.*" %)) 
+           (remove #(re-matches #".*Změna jídelníčku.*" %))
            (remove #(re-matches #"(?i).*STRAVA JE.*" %))
            (remove #(re-matches #"^\n.+" %))
-           (map #(str/replace % " " "")) 
+           (map #(str/replace % " " ""))
            (map #(str/replace % #"\d[0-9abcde, ]+$" ""))
            (map #(str/replace % #"(svač.?:).+$" ""))
            (map #(str/replace % #"(oběd:)" ""))
@@ -113,7 +141,7 @@
 
 (defn render-pango [{:keys [week-title days] :as _model}]
   [:span {:font-family "DejaVu Serif"}
-   [:span {:font_size 22000} week-title]  
+   [:span {:font_size 22000} week-title]
    [:span {:font-size 12000} "\n"]
    [:span
     (map (fn [[_day-kw day-text]]
@@ -122,8 +150,7 @@
             [:span {:font_size 15000} (postprocess-day-text day-text)]])
          days)]
    [:span "\n\n"]
-   [:span {
-           :font_size 10000} (current-datetime)]])
+   [:span {:font_size 10000} (current-datetime)]])
 
 (defn compose [output-path {:keys [menu-hickory]}]
   (let [output-dir (-> output-path fs/file fs/parent)]
@@ -151,16 +178,13 @@
   (p/sh "ssh" "root@kindle" "/usr/sbin/eips -g /tmp/image.png"))
 
 (defn compose-file []
-  (compose "output/composition.png" (download-newest-menu menu-urls)))
+  (compose "output/composition.png" (download-current-menu menu-urls)))
 
 (defn go []
   (compose-file)
   (upload-to-kindle)
   (show-on-kindle)
   nil)
-
-(comment
-  (go))
 
 (defn handler [_req]
   {:status 200
@@ -197,4 +221,6 @@
   (start-server port)
   (deref (promise)))
 
-;; (go)
+(comment
+  (go)
+  )
