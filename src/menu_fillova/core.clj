@@ -1,30 +1,29 @@
 (ns menu-fillova.core
   (:gen-class)
   (:require
-   [babashka.curl :as curl]
-   [babashka.fs :as fs]
+   [babashka.curl :as curl] 
    [babashka.process :as p]
    [clojure.java.io :as io]
    [clojure.string :as str]
    [hiccup2.core :as h]
    [hickory.core :as hickory]
    [hickory.select :as s]
-   [org.httpkit.server :as http])
+   [org.httpkit.server :as http]
+   [menu-fillova.webrender :as wr])
   (:import
-   [java.time
-    DayOfWeek
-    LocalDate
-    LocalTime
-    ZoneId
-    ZoneOffset]
+   [java.time DayOfWeek LocalDate LocalTime ZoneId ZoneOffset]
    [java.util Date]))
 
 (def port 8080)
 
-(defonce compose-tmp (name (gensym "compose-")))
-
 (def menu-urls ["https://www.ms-fillova.cz/jidelnicek1-stary"
                 "https://www.ms-fillova.cz/jidelnicek2-stary"])
+
+(def day-labels {:monday "Pondělí"
+                 :tuesday "Úterý"
+                 :wednesday "Středa"
+                 :thursday "Čtvrtek"
+                 :friday "Pátek"})
 
 (defn download-menu-hickory! [url]
   (-> (curl/get url)
@@ -95,14 +94,14 @@
          first)))
 
 (defn extract-days [cleaned-up-lunch-rows-strings]
-  (let [singleline-text (->> cleaned-up-lunch-rows-strings
+  (let [singleline-text (->> cleaned-up-lunch-rows-strings 
                              (interleave (repeat "\n"))
                              (apply str))]
-    {:monday (second (re-find #"(?is)(Pondělí.+)Úterý." singleline-text))
-     :tuesday (second (re-find #"(?is)(Úterý.+)Středa.+" singleline-text))
-     :wednesday (second (re-find #"(?is)(Středa.+)Čtvrtek.+" singleline-text))
-     :thursday (second (re-find #"(?is)(Čtvrtek.+)Pátek.+" singleline-text))
-     :friday (second (re-find #"(?is)(Pátek.+)" singleline-text))}))
+    {:monday (second (re-find #"(?is)Pondělí[ :]*(.+)Úterý." singleline-text))
+     :tuesday (second (re-find #"(?is)Úterý[ :]*(.+)Středa.+" singleline-text))
+     :wednesday (second (re-find #"(?is)Středa[ :]*(.+)Čtvrtek.+" singleline-text))
+     :thursday (second (re-find #"(?is)Čtvrtek[ :]*(.+)Pátek.+" singleline-text))
+     :friday (second (re-find #"(?is)Pátek[ :]*(.+)" singleline-text))}))
 
 (defn cleanup-lunch-rows [menu-hickory]
   (-> menu-hickory
@@ -127,69 +126,45 @@
     {:week-title title
      :days (extract-days cleaned-up-lunch-rows)}))
 
-(defn make-day-names-bold [s]
-  (reduce (fn [acc i]
-            (str/replace acc (re-pattern i) (str "<b>" i "</b>")))
-          s
-          ["Pondělí" "Úterý" "Středa" "Čtvrtek" "Pátek"]))
-
 (defn current-datetime []
   (.format (java.text.SimpleDateFormat. "d.M.yyyy, HH:mm:ss") (java.util.Date.)))
 
-(defn postprocess-day-text [s]
-  (make-day-names-bold s))
+(defn compose-file-fs [{:keys [menu-hickory]}] 
+  (let [width 600
+        height 800
+        model (make-model menu-hickory)
+        {:keys [week-title days]} model
+        html (str (h/html
+                   [:html {:style {:background-color "white"}} 
+                    [:div
+                     [:div {:style {:font-size "22pt;"
+                                    :font-family "DejaVu Serif"
+                                    :padding "24pt"}}
 
-(defn render-pango [{:keys [week-title days] :as _model}]
-  [:span {:font-family "DejaVu Serif"}
-   [:span {:font_size 22000} week-title]
-   [:span {:font-size 12000} "\n"]
-   [:span
-    (map (fn [[_day-kw day-text]]
-           [:span
-            [:span {:font_size 25000} "\n"]
-            [:span {:font_size 15000} (postprocess-day-text day-text)]])
-         days)]
-   [:span "\n\n"]
-   [:span {:font_size 10000} (current-datetime)]])
+                      [:div {:style {:font-size "22pt"}}
+                       [:center week-title]]
+                      [:hr {:style {:border "1px dotted black"}}]
+                      [:div
+                       (map (fn [[day-kw day-text]]
+                              [:div {:style {:font-size "16pt"
+                                             :padding-top "16pt"}}
+                               [:div {:style {:font-weight 800}}
+                                (day-labels day-kw)]
+                               [:div {:style {:padding-top "4pt"}}
+                                (->> (str/split day-text #"\n")
+                                     (map #(-> [:div %])))]])
+                            days)]
+                      [:div {:style {:text-align "right"
+                                     :padding-top "12pt"
+                                     :font-size "12pt"}} (current-datetime)]]]]))]
+    (wr/render-html-to-png! html "/tmp/fillova.png" width height))
+  )
 
-(defn compose [output-path {:keys [menu-hickory]}]
-  (let [output-dir (-> output-path fs/file fs/parent)]
-    (when output-dir
-      (fs/create-dirs output-dir))
-    (let [tmp-dir (fs/path (fs/temp-dir) compose-tmp)
-          pango-path (str (fs/path tmp-dir "pango.png"))]
-      (fs/create-dirs tmp-dir)
-      (println "Writing pango output to: " pango-path)
-      (p/sh "convert" "-background" "white" "-size" "600x800"
-            (str "pango:" (h/html (render-pango (make-model menu-hickory))))
-            "-bordercolor" "white" "-border" "30"
-            pango-path)
-
-      (println "Writing result output to: " output-path)
-      (p/sh "montage" pango-path
-            "-tile" "x2" "-mode" "concatenate"
-            output-path)
-      nil)))
-
-(defn upload-to-kindle []
-  (p/sh "scp" "output/composition.png" "root@kindle:/tmp/image.png"))
-
-(defn show-on-kindle []
-  (p/sh "ssh" "root@kindle" "/usr/sbin/eips -g /tmp/image.png"))
-
-(defn compose-file []
-  (compose "output/composition.png" (download-current-menu menu-urls)))
-
-(defn go []
-  (compose-file)
-  (upload-to-kindle)
-  (show-on-kindle)
-  nil)
-
+;; server
 (defn handler [_req]
   {:status 200
-   :body (let [_ (compose-file)]
-           (io/file "output/composition.png"))})
+   :body (let [_ (compose-file-fs (download-current-menu menu-urls))]
+           (io/file "/tmp/fillova.png"))})
 
 (defonce server (atom nil))
 
@@ -217,10 +192,23 @@
   (start-server port)
   (stop-server))
 
+;; main
 (defn -main [& _args]
   (start-server port)
   (deref (promise)))
 
-(comment
-  (go)
-  )
+;; dev
+(def memoized-download-current-menu (memoize download-current-menu))
+
+(defn upload-to-kindle []
+  (p/sh "scp" "output/composition.png" "root@kindle:/tmp/image.png"))
+
+(defn show-on-kindle []
+  (p/sh "ssh" "root@kindle" "/usr/sbin/eips -g /tmp/image.png"))
+
+(defn go []
+  (compose-file-fs (memoized-download-current-menu menu-urls))
+  #_#_(upload-to-kindle)
+  (show-on-kindle)
+  nil)
+
