@@ -1,18 +1,22 @@
 (ns menu-fillova.core
   (:gen-class)
-  (:require
-   [babashka.curl :as curl] 
-   [babashka.process :as p]
-   [clojure.java.io :as io]
-   [clojure.string :as str]
-   [hiccup2.core :as h]
-   [hickory.core :as hickory]
-   [hickory.select :as s]
-   [org.httpkit.server :as http]
-   [menu-fillova.webrender :as wr])
-  (:import
-   [java.time DayOfWeek LocalDate LocalTime ZoneId ZoneOffset]
-   [java.util Date]))
+  (:require [babashka.curl :as curl]
+            [babashka.process :as p]
+            [clojure.java.io :as io]
+            [clojure.string :as str]
+            [hiccup2.core :as h]
+            [hickory.core :as hickory]
+            [hickory.select :as s]
+            [menu-fillova.css :as css]
+            [menu-fillova.webrender :as wr]
+            [org.httpkit.server :as http])
+  (:import [java.time
+            DayOfWeek
+            LocalDate
+            LocalTime
+            ZoneId
+            ZoneOffset]
+           [java.util Date]))
 
 (def port 8080)
 
@@ -135,28 +139,33 @@
         model (make-model menu-hickory)
         {:keys [week-title days]} model
         html (str (h/html
-                   [:html {:style {:background-color "white"}} 
+                   [:html
+                    [:head
+                     [:style css/reset]]
                     [:div
-                     [:div {:style {:font-size "22pt;"
+                     [:div {:style {:font-size "20pt;"
                                     :font-family "DejaVu Serif"
-                                    :padding "24pt"}}
+                                    :padding "32pt"}}
 
-                      [:div {:style {:font-size "22pt"}}
+                      [:div {:style {:font-size "24pt"
+                                     :font-weight 800}}
                        [:center week-title]]
                       [:hr {:style {:border "1px dotted black"}}]
                       [:div
                        (map (fn [[day-kw day-text]]
-                              [:div {:style {:font-size "16pt"
-                                             :padding-top "16pt"}}
-                               [:div {:style {:font-weight 800}}
+                              [:div 
+                               [:div {:style {:font-size "22pt"
+                                              :padding-top "16pt"
+                                              :font-weight 800}} 
                                 (day-labels day-kw)]
-                               [:div {:style {:padding-top "4pt"}}
+                               [:div {:style {:padding-top "4pt"
+                                              :font-size "20pt"}}
                                 (->> (str/split day-text #"\n")
                                      (map #(-> [:div %])))]])
                             days)]
                       [:div {:style {:text-align "right"
                                      :padding-top "12pt"
-                                     :font-size "12pt"}} (current-datetime)]]]]))]
+                                     :font-size "14pt"}} (current-datetime)]]]]))]
     (wr/render-html-to-png! html "/tmp/fillova.png" width height))
   )
 
@@ -201,14 +210,14 @@
 (def memoized-download-current-menu (memoize download-current-menu))
 
 (defn upload-to-kindle []
-  (p/sh "scp" "output/composition.png" "root@kindle:/tmp/image.png"))
+  (p/sh "scp" "/tmp/fillova.png" "root@kindle:/tmp/image.png"))
 
 (defn show-on-kindle []
   (p/sh "ssh" "root@kindle" "/usr/sbin/eips -g /tmp/image.png"))
 
 (defn go []
   (compose-file-fs (memoized-download-current-menu menu-urls))
-  #_#_(upload-to-kindle)
+  (upload-to-kindle)
   (show-on-kindle)
   nil)
 
