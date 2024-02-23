@@ -17,6 +17,10 @@ docker build -t menu-fillova .
 docker run --rm -p 8080:8080 menu-fillova
 ```
 
+## Images
+
+I'm using [Weather Icons](https://erikflowers.github.io/weather-icons), converted into PNG files. Because right now I wasn't able to use SVGs nor fonts correctly in Flying Saucer.
+
 ## Thanks to
 
 - [PeZ's magick-pango-babashka "POC example"](https://github.com/PEZ/magick-pango-babashka)

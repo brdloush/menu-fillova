@@ -6,5 +6,6 @@ RUN mkdir /opt/menu-fillova
 ADD target/menu-fillova-1.0.0-standalone.jar /opt/menu-fillova/
 EXPOSE 8080
 WORKDIR /tmp
-
+ENV RESOURCES_DIR=/opt/menu-fillova/resources
+COPY resources /opt/menu-fillova/resources
 CMD ["/opt/java/openjdk/bin/java", "-jar", "/opt/menu-fillova/menu-fillova-1.0.0-standalone.jar"]

@@ -1,0 +1,31 @@
+{:tasks
+ {:requires ([babashka.fs :as fs]
+             [babashka.http-client :as http]
+             [babashka.process :as p]
+             [clojure.java.io :as io])
+
+  download-weather-icons-zip
+  (do (let [local-download-file-dir "target/weather-icons/zip"
+            zip-file-name "weather-icons-master.zip"]
+        ;; (println "Downloading icons")
+        ;; (fs/delete-tree local-download-file-dir)
+        ;; (fs/create-dirs local-download-file-dir)
+        ;; (p/sh {:dir local-download-file-dir}
+        ;;       "wget" "https://codeload.github.com/erikflowers/weather-icons/zip/refs/heads/master")
+        ;; (println "Download finished")
+        ;; (println "Unzipping..")
+        ;; (fs/move (str local-download-file-dir "/master")
+        ;;          (str local-download-file-dir "/" zip-file-name))
+        ;; (p/sh {:dir local-download-file-dir}
+        ;;       "unzip" zip-file-name)
+        (let [svg-dir (str local-download-file-dir "/weather-icons-master/svg")]
+          (fs/create-dirs (str "resources/weather-icons/png"))
+          (->> (fs/list-dir svg-dir)
+               (pmap (fn [svg-path]
+                       (let [filename (.getName (fs/file svg-path))
+                             svg-full-filename (str svg-dir "/" filename)
+                             png-filename (-> (str "resources/weather-icons/png/" filename)
+                                              (.replaceAll ".svg" ".png"))]
+                         (println "- converting" filename)
+                         (p/sh "convert" "-density" "1200" "-background" "none" "-resize" "200x200" svg-full-filename png-filename))))
+               doall))))}}

@@ -8,6 +8,7 @@
             [hickory.core :as hickory]
             [hickory.select :as s]
             [menu-fillova.css :as css]
+            [menu-fillova.weather :as weather]
             [menu-fillova.webrender :as wr]
             [org.httpkit.server :as http])
   (:import [java.time
@@ -144,28 +145,31 @@
                      [:style css/reset]]
                     [:div
                      [:div {:style {:font-size "20pt;"
-                                    :font-family "DejaVu Serif"
-                                    :padding "32pt"}}
+                                    :font-family "DejaVu Serif"}}
 
-                      [:div {:style {:font-size "24pt"
-                                     :font-weight 800}}
-                       [:center week-title]]
-                      [:hr {:style {:border "1px dotted black"}}]
-                      [:div
-                       (map (fn [[day-kw day-text]]
-                              [:div 
-                               [:div {:style {:font-size "22pt"
-                                              :padding-top "16pt"
-                                              :font-weight 800}} 
-                                (day-labels day-kw)]
-                               [:div {:style {:padding-top "4pt"
-                                              :font-size "20pt"}}
-                                (->> (str/split day-text #"\n")
-                                     (map #(-> [:div %])))]])
-                            days)]
-                      [:div {:style {:text-align "right"
-                                     :padding-top "12pt"
-                                     :font-size "14pt"}} (current-datetime)]]]]))]
+                      ;; Menu fillova
+                      [:div {:style {:padding "32pt"}}
+                       [:div {:style {:font-size "24pt"
+                                      :font-weight 800}}
+                        [:center week-title]]
+                       [:hr {:style {:border "1px dotted black"}}]
+                       [:div
+                        (map (fn [[day-kw day-text]]
+                               [:div 
+                                [:div {:style {:font-size "22pt"
+                                               :padding-top "16pt"
+                                               :font-weight 800}} 
+                                 (day-labels day-kw)]
+                                [:div {:style {:padding-top "4pt"
+                                               :font-size "20pt"}}
+                                 (->> (str/split day-text #"\n")
+                                      (map #(-> [:div %])))]])
+                             days)]
+                       [:div {:style {:text-align "right"
+                                      :padding-top "12pt"
+                                      :font-size "14pt"}} (current-datetime)]]
+                      
+                      (weather/render-predictions-row (weather/download-and-parse-predictions))]]]))]
     (wr/render-html-to-png! html "/tmp/fillova.png" width height))
   )
 
