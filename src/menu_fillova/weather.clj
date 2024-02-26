@@ -73,7 +73,6 @@
 
 (defn get-weather-description [code]
   (cond
-    (= code 0) "Jasno"
     (#{1} code) "Polojasno"
     (#{2} code) "Oblačno"
     (#{3} code) "Zataženo"
@@ -83,24 +82,24 @@
     (#{53} code) "Střední mrholení"
     (#{55} code) "Husté mrholení"
     (#{56} code) "Slabé mrz. mrholení."
-    (#{57} code) "Silné mrz. mrholení"
+    (#{57} code) "Husté mrz. mrholení"
     (#{61} code) "Slabý déšť"
     (#{63} code) "Střední déšť"
-    (#{65} code) "Silný déšť"
+    (#{65} code) "Prudký déšť"
     (#{66} code) "Slabý mrz. déšť"
-    (#{67} code) "Silný mrz. déšť"
+    (#{67} code) "Prudký mrz. déšť"
     (#{71} code) "Slabé sněžení"
     (#{73} code) "Střední sněžení"
-    (#{75} code) "Silné Sněžení"
-    (#{77} code) "Krupobití"
-    (#{80} code) "Slabý déšť se sprškami"
-    (#{81} code) "Střední déšť se sprškami"
-    (#{82} code) "Prudký déšť se sprškami"
+    (#{75} code) "Silné sněžení"
+    (#{77} code) "Sněhové vločky"
+    (#{80} code) "Slabé přeháňky"
+    (#{81} code) "Střední přeháňky"
+    (#{82} code) "Silné přeháňky"
     (#{85} code) "Slabé sněhové přeháňky"
     (#{86} code) "Silné sněhové přeháňky"
-    (#{95} code) "Slabá bouřka"
-    (#{96} code) "Střední bouřka"
-    (#{99} code) "Bouřka s těžkým krupobitím"
+    (#{95} code) "Bouřka s hromobitím"
+    (#{96} code) "Bouřka s krupobitím"
+    (#{99} code) "Bouřka se silným krupobitím"
     :else "Neznámý kód"))
 
 (defn resources-dir-location []

@@ -148,7 +148,9 @@
                                     :font-family "DejaVu Serif"}}
 
                       ;; Menu fillova
-                      [:div {:style {:padding "32pt"}}
+                      [:div {:style {:padding "32pt"
+                                     :height "550px"
+                                     :overflow "hidden"}}
                        [:div {:style {:font-size "24pt"
                                       :font-weight 800}}
                         [:center week-title]]
@@ -225,3 +227,5 @@
   (show-on-kindle)
   nil)
 
+(comment
+  (compose-file-fs (memoized-download-current-menu menu-urls)))
