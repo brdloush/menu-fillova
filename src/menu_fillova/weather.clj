@@ -3,7 +3,8 @@
             [cheshire.core :as json]
             [hiccup2.core :as h]
             [menu-fillova.css :as css]
-            [menu-fillova.webrender :refer [render-html-to-png!]]))
+            [menu-fillova.webrender :refer [render-html-to-png!]]) 
+  (:import [java.time LocalDate DayOfWeek]))
 
 (defn download-prediction []
   (json/parse-string
@@ -137,8 +138,16 @@
                     :text-align "center"}}
       (str (java.lang.Math/round temperature_2m) "˚C")]]))
 
+(defn is-now-weekend? []
+  (some? (#{DayOfWeek/SATURDAY
+            DayOfWeek/SUNDAY}
+          (.getDayOfWeek (LocalDate/now)))))
+
+
 (defn render-predictions-row [parsed-predictions]
-  (let [plus-days 0
+  (let [plus-days (if (is-now-weekend?)
+                    1
+                    0)
         hours-offset (* plus-days 24)]
     [:div {:style {:width "100%"}}
      (render-prediction (nth parsed-predictions (+ hours-offset 8)))
