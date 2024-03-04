@@ -74,6 +74,7 @@
 
 (defn get-weather-description [code]
   (cond
+    (#{0} code) "Jasno"
     (#{1} code) "Polojasno"
     (#{2} code) "Oblačno"
     (#{3} code) "Zataženo"
