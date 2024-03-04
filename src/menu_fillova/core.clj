@@ -150,7 +150,7 @@
 
                       ;; Menu fillova
                       [:div {:style {:padding "32pt"
-                                     :height "550px"
+                                     :height "530px"
                                      :overflow "hidden"}}
                        (when model
                          [:div
@@ -160,20 +160,20 @@
                           [:hr {:style {:border "1px dotted black"}}]
                           [:div
                            (map (fn [[day-kw day-text]]
-                                  [:div 
+                                  [:div
                                    [:div {:style {:font-size "22pt"
                                                   :padding-top "16pt"
-                                                  :font-weight 800}} 
+                                                  :font-weight 800}}
                                     (day-labels day-kw)]
                                    [:div {:style {:padding-top "4pt"
                                                   :font-size "20pt"}}
                                     (->> (str/split day-text #"\n")
                                          (map #(-> [:div %])))]])
-                                days)]
-                          [:div {:style {:text-align "right"
-                                         :padding-top "12pt"
-                                         :font-size "14pt"}} (current-datetime)]])]
-                      
+                                days)]]
+                         [:div {:style {:text-align "right"
+                                        :padding-top "12pt"
+                                        :font-size "14pt"}} (current-datetime)])]
+
                       (weather/render-predictions-row (weather/download-and-parse-predictions))]]]))]
     (wr/render-html-to-png! html "/tmp/fillova.png" width height))
   )
@@ -226,7 +226,7 @@
 
 (defn go []
   (compose-file-fs (memoized-download-current-menu menu-urls))
-  (upload-to-kindle)
+  #_#_(upload-to-kindle)
   (show-on-kindle)
   nil)
 
