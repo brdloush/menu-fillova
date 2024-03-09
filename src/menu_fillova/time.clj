@@ -1,15 +1,13 @@
 (ns menu-fillova.time
   (:require [tick.core :as t]) 
-  (:import [java.text SimpleDateFormat]
-           [java.time DayOfWeek]))
+  (:import [java.time DayOfWeek]))
 
 (defn prague-time! []
   (-> (t/date-time)
       (t/in "Europe/Prague")))
 
-(defn format-czech-date [date]
-  (.format (SimpleDateFormat. "d.M.y")
-           date))
+(defn format-czech-date [zdt] 
+  (t/format "d.M.y" zdt))
 
 (def czech-name-of-days 
   {DayOfWeek/SUNDAY "Neděle"
