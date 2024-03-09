@@ -1,5 +1,5 @@
 (ns menu-fillova.nameday
-  (:import [java.util Calendar]))
+  (:import [java.time.format DateTimeFormatter]))
 
 (def namedays
   {"01-02"  ["Karina", "Karína", "Karin"],
@@ -362,11 +362,7 @@
    "12-30"  ["David"],
    "12-31"  ["Silvestr", "Silvester", "Sylvestr"]})
 
-(defn find-namedays [date]
-  (let [calendar (doto (Calendar/getInstance)
-                   (.setTime date))
-        month (.get calendar Calendar/MONTH)
-        day-of-month (.get calendar Calendar/DAY_OF_MONTH)
-        lookup-key (format "%02d-%02d" (inc month) day-of-month)] 
+(defn find-namedays [zdt] 
+  (let [lookup-key (.format (DateTimeFormatter/ofPattern "MM-dd")
+                            zdt)] 
     (get namedays lookup-key)))
-

@@ -1,14 +1,14 @@
 (ns menu-fillova.weather
   (:require [babashka.fs :as fs]
             [cheshire.core :as json]
+            [clojure.string :as str]
             [hiccup2.core :as h]
             [menu-fillova.css :as css]
             [menu-fillova.nameday :refer [find-namedays]]
+            [menu-fillova.time :refer [czech-day-of-week format-czech-date
+                                       prague-time!]]
             [menu-fillova.weather :as weather]
-            [menu-fillova.webrender :refer [render-html-to-png!]]
-            [clojure.string :as str])
-  (:import [java.time DayOfWeek LocalDate]
-           [java.util Calendar Date]))
+            [menu-fillova.webrender :refer [render-html-to-png!]]))
 
 (defn download-prediction []
   (json/parse-string
@@ -148,35 +148,8 @@
                     :text-align "center"}}
       (str (java.lang.Math/round temperature_2m) "˚C")]]))
 
-(defn is-now-weekend? []
-  (some? (#{DayOfWeek/SATURDAY
-            DayOfWeek/SUNDAY}
-          (.getDayOfWeek (LocalDate/now)))))
-
-(def czech-name-of-days
-  {1 "Neděle"
-   2 "Pondělí"
-   3 "Úterý"
-   4 "Středa"
-   5 "Čtvrtek"
-   6 "Pátek"
-   7 "Sobota"})
-
-(defn czech-day-of-week [date]
-  (let [calendar (doto (Calendar/getInstance)
-                   (.setTime date))
-        dow (.get calendar Calendar/DAY_OF_WEEK)
-        czech-name (get czech-name-of-days dow)]
-    (println "czech-name" czech-name)
-    czech-name
-    ))
-
-(defn format-czech-date [date]
-  (.format (java.text.SimpleDateFormat. "d.M.y")
-           date))
-
 (defn render-calendar-day-info []
-  (let [today (Date.)
+  (let [today (prague-time!)
         czech-day-name (czech-day-of-week today)
         formatted-date (format-czech-date today)
         namedays (find-namedays today)

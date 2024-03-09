@@ -83,23 +83,24 @@
 (defn download-current-menu [menu-urls]
   (let [is-within-this-week (let [[week-start-inst week-end-inst] (current-week-inst-ranges!)]
                               (fn [inst]
-                                (is-inst-between? inst week-start-inst week-end-inst)))]
-    (->> (pmap
-           (fn [url]
-             (let [menu-hickory (download-menu-hickory! url)
-                   week-title (extract-week-title menu-hickory)
-                   until-date (extract-until-date week-title)]
-               {:url url
-                :menu-hickory menu-hickory
-                :week-title week-title
-                :until-date until-date}))
-           menu-urls)
-         (filter (fn [{:keys [until-date]}]
-                   (is-within-this-week until-date)))
-         first)))
+                                (is-inst-between? inst week-start-inst week-end-inst)))
+        parsed-menus (->> (pmap
+                           (fn [url]
+                             (let [menu-hickory (download-menu-hickory! url)
+                                   week-title (extract-week-title menu-hickory)
+                                   until-date (extract-until-date week-title)]
+                               {:url url
+                                :menu-hickory menu-hickory
+                                :week-title week-title
+                                :until-date until-date}))
+                           menu-urls))] 
+    (or (first (filter (fn [{:keys [until-date]}]
+                         (is-within-this-week until-date))
+                       parsed-menus))
+        (first (sort-by (comp #(.getTime %) :until-date) > parsed-menus)))))
 
 (defn extract-days [cleaned-up-lunch-rows-strings]
-  (let [singleline-text (->> cleaned-up-lunch-rows-strings 
+  (let [singleline-text (->> cleaned-up-lunch-rows-strings
                              (interleave (repeat "\n"))
                              (apply str))]
     {:monday (second (re-find #"(?is)Pondělí[ :]*(.+)Úterý." singleline-text))
@@ -135,11 +136,9 @@
 (defn current-datetime []
   (.format (java.text.SimpleDateFormat. "d.M.yyyy, HH:mm:ss") (java.util.Date.)))
 
-(defn compose-file-fs [{:keys [menu-hickory]}] 
+(defn compose-file-fs [{:keys [menu-hickory]}]
   (let [width 600
         height 800
-        model (make-model menu-hickory)
-        {:keys [week-title days]} model
         html (str (h/html
                    [:html
                     [:head
@@ -147,36 +146,37 @@
                     [:div
                      [:div {:style {:font-size "20pt;"
                                     :font-family "DejaVu Serif"}}
-
                       ;; Menu fillova
                       [:div {:style {:padding "32pt"
                                      :height "530px"
                                      :overflow "hidden"}}
-                       (when model
-                         [:div
-                          [:div {:style {:font-size "24pt"
-                                         :font-weight 800}}
-                           [:center week-title]]
-                          [:hr {:style {:border "1px dotted black"}}]
-                          [:div
-                           (map (fn [[day-kw day-text]]
-                                  [:div
-                                   [:div {:style {:font-size "22pt"
-                                                  :padding-top "16pt"
-                                                  :font-weight 800}}
-                                    (day-labels day-kw)]
-                                   [:div {:style {:padding-top "4pt"
-                                                  :font-size "20pt"}}
-                                    (->> (str/split day-text #"\n")
-                                         (map #(-> [:div %])))]])
-                                days)]]
-                         [:div {:style {:text-align "right"
-                                        :padding-top "12pt"
-                                        :font-size "14pt"}} (current-datetime)])]
+                       (let [model (make-model menu-hickory)
+                             {:keys [week-title days]} model]
+                         (when model
+                           [:div
+                            [:div
+                             [:div {:style {:font-size "24pt"
+                                            :font-weight 800}}
+                              [:center week-title]]
+                             [:hr {:style {:border "1px dotted black"}}]
+                             [:div
+                              (map (fn [[day-kw day-text]]
+                                     [:div
+                                      [:div {:style {:font-size "20pt"
+                                                     :padding-top "16pt"
+                                                     :font-weight 800}}
+                                       (day-labels day-kw)]
+                                      [:div {:style {:padding-top "4pt"
+                                                     :font-size "18pt"}}
+                                       (->> (str/split day-text #"\n")
+                                            (map #(-> [:div %])))]])
+                                   days)]]
+                            [:div {:style {:text-align "right"
+                                           :padding-top "12pt"
+                                           :font-size "12pt"}} (current-datetime)]]))]
 
                       (weather/render-predictions-row (weather/download-and-parse-predictions))]]]))]
-    (wr/render-html-to-png! html "/tmp/fillova.png" width height))
-  )
+    (wr/render-html-to-png! html "/tmp/fillova.png" width height)))
 
 ;; server
 (defn handler [_req]
@@ -227,7 +227,7 @@
 (defn go []
   (compose-file-fs (memoized-download-current-menu menu-urls))
   #_#_(upload-to-kindle)
-  (show-on-kindle)
+    (show-on-kindle)
   nil)
 
 (comment
