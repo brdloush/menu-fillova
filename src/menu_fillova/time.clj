@@ -23,7 +23,3 @@
         czech-name (get czech-name-of-days dow)] 
     czech-name))
 
-(defn is-weekend? [zdt]
-  (some? (#{DayOfWeek/SATURDAY
-            DayOfWeek/SUNDAY}
-          (t/day-of-week zdt))))

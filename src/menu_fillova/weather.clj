@@ -1,14 +1,8 @@
 (ns menu-fillova.weather
   (:require [babashka.fs :as fs]
             [cheshire.core :as json]
-            [clojure.string :as str]
-            [hiccup2.core :as h]
-            [menu-fillova.css :as css]
-            [menu-fillova.nameday :refer [find-namedays]]
-            [menu-fillova.time :refer [czech-day-of-week format-czech-date
-                                       prague-time!]]
-            [menu-fillova.weather :as weather]
-            [menu-fillova.webrender :refer [render-html-to-png!]]))
+            [menu-fillova.weather :as weather])
+  (:import [java.lang Math]))
 
 (defn download-prediction []
   (json/parse-string
@@ -40,9 +34,9 @@
           (-> hourly :weather_code)
           (-> hourly :wind_speed_10m))))
 
-(defn download-and-parse-predictions []
+(defn make-model! []
   (let [predictions-response (download-prediction)]
-    (parse-prediction-response predictions-response)))
+    {:parsed-predictions (parse-prediction-response predictions-response)}))
 
 (def weather-codes-mapping
   {0 {:png "wi-day-sunny.png"
@@ -120,16 +114,15 @@
 (defn render-prediction [{:keys [time
                                  weather_code
                                  temperature_2m
-                                 precipitation
-                                 precipitation_probability
-                                 wind_speed_10m] :as _prediction}]
+                                 _precipitation
+                                 _precipitation_probability
+                                 _wind_speed_10m] :as _prediction}]
   (let [weather-icon-png (weather-icon-url (weather-code->png-image weather_code))
         _raindrop-icon-png (weather-icon-url "wi-raindrops.png")
         weather-description (get-weather-description weather_code)]
     [:div {:style {:background-color "#FFF"
                    :float "left"
-                   :width "200px"
-                   #_#_:padding "12px"}}
+                   :width "200px"}}
      [:div {:style {:height "72px"}}
       [:center
        [:img {:src weather-icon-png
@@ -146,42 +139,14 @@
      [:div {:style {:font-size "18pt"
                     :padding "4pt 16pt"
                     :text-align "center"}}
-      (str (java.lang.Math/round temperature_2m) "˚C")]]))
+      (str (Math/round temperature_2m) "˚C")]]))
 
-(defn render-calendar-day-info []
-  (let [today (prague-time!)
-        czech-day-name (czech-day-of-week today)
-        formatted-date (format-czech-date today)
-        namedays (find-namedays today)
-        namedays-fragment (if (not-empty namedays)
-                            (str ", svátek: " (str/join "/" namedays))
-                            "")]
-    [:div czech-day-name " " formatted-date namedays-fragment]))
-
-(defn render-predictions-row [parsed-predictions]
+(defn render [{:keys [parsed-predictions] :as _model}] 
   (let [plus-days 0
-        hours-offset (* plus-days 24)]
-    [:div
-     [:div {:style {:padding-left "16px"
-                    :padding-right "16px"}}
-      (render-calendar-day-info)]
-     [:div {:style {:width "100%"}}
-      (render-prediction (nth parsed-predictions (+ hours-offset 8)))
-      (render-prediction (nth parsed-predictions (+ hours-offset 12)))
-      (render-prediction (nth parsed-predictions (+ hours-offset 16)))]]))
+        hours-offset (* plus-days 24)] 
+    [:div {:style {:width "100%"}}
+     (render-prediction (nth parsed-predictions (+ hours-offset 8)))
+     (render-prediction (nth parsed-predictions (+ hours-offset 12)))
+     (render-prediction (nth parsed-predictions (+ hours-offset 16)))]))
 
-(comment
-  (do
-    (defn render-page [parsed-predictions]
-      (h/html
-       [:html
-        [:head
-         [:style css/reset]]
-        [:body
-         (render-predictions-row parsed-predictions)]]))
 
-    (defonce parsed-predictions-response (download-and-parse-predictions))
-
-    (render-html-to-png!
-     (str (render-page parsed-predictions-response))
-     "/tmp/fillova.png" 6 900)))
