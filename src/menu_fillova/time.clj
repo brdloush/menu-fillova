@@ -7,7 +7,10 @@
       (t/in "Europe/Prague")))
 
 (defn format-czech-date [zdt] 
-  (t/format "d.M.y" zdt))
+  (t/format "d.M.yyyy" zdt))
+
+(defn format-czech-datetime [zdt]
+  (t/format "d.M.yyyy, HH:mm:ss" zdt))
 
 (def czech-name-of-days 
   {DayOfWeek/SUNDAY "Neděle"
@@ -22,4 +25,3 @@
   (let [dow (t/day-of-week zdt)
         czech-name (get czech-name-of-days dow)] 
     czech-name))
-

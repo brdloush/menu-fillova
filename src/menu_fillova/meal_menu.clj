@@ -1,9 +1,9 @@
 (ns menu-fillova.meal-menu
-  (:require
-   [clojure.string :as str]
-   [hickory.core :as hickory]
-   [hickory.select :as s]
-   [babashka.curl :as curl])
+  (:require [babashka.curl :as curl]
+            [clojure.string :as str]
+            [hickory.core :as hickory]
+            [hickory.select :as s]
+            [menu-fillova.time :refer [format-czech-datetime prague-time!]])
   (:import [java.time
             DayOfWeek
             LocalDate
@@ -67,10 +67,6 @@
     [(-> now-ld (.with DayOfWeek/MONDAY) .atStartOfDay (.atZone (ZoneId/of "Europe/Prague")) .toInstant Date/from)
      (-> now-ld (.with DayOfWeek/SUNDAY) (.atTime LocalTime/MAX) (.atZone (ZoneId/of "Europe/Prague")) .toInstant Date/from)]))
 
-(let [now-inst (.toInstant (Date.))
-      now-ld (LocalDate/ofInstant now-inst ZoneOffset/UTC)]
-  (-> now-ld (.with DayOfWeek/MONDAY) .atStartOfDay (.atZone (ZoneId/of "Europe/Prague")) .toInstant Date/from))
-
 (defn download-current-menu! []
   (let [is-within-this-week (let [[week-start-inst week-end-inst] (current-week-inst-ranges!)]
                               (fn [inst]
@@ -126,7 +122,7 @@
          :days (extract-days cleaned-up-lunch-rows)}))))
 
 (defn current-datetime []
-  (.format (java.text.SimpleDateFormat. "d.M.yyyy, HH:mm:ss") (java.util.Date.)))
+  (format-czech-datetime (prague-time!)))
 
 (defn render [model]
   (when-let [{:keys [week-title days]} model]
