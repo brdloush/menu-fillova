@@ -125,7 +125,7 @@
   (format-czech-datetime (prague-time!)))
 
 (defn render [model]
-  (when-let [{:keys [week-title days]} model]
+  #dbg(when-let [{:keys [week-title days]} model]
     [:div
      [:div
       [:div {:style {:font-size "24pt"
@@ -141,7 +141,7 @@
                 (day-labels day-kw)]
                [:div {:style {:padding-top "4pt"
                               :font-size "18pt"}}
-                (->> (str/split day-text #"\n")
+                (->> (str/split (or day-text "") #"\n")
                      (map #(-> [:div %])))]])
             days)]]
      [:div {:style {:text-align "right"
