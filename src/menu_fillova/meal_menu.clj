@@ -125,7 +125,7 @@
   (format-czech-datetime (prague-time!)))
 
 (defn render [model]
-  #dbg(when-let [{:keys [week-title days]} model]
+  (when-let [{:keys [week-title days]} model]
     [:div
      [:div
       [:div {:style {:font-size "24pt"
