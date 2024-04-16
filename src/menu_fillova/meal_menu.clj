@@ -28,6 +28,9 @@
       (hickory/parse)
       (hickory/as-hickory)))
 
+(comment
+  (def menu-hickory (download-menu-hickory! (first menu-urls))))
+
 (defn extract-week-title-variant-1 [menu-hickory]
   (->> menu-hickory
        (s/select (s/tag :h1))
@@ -96,22 +99,29 @@
      :thursday (second (re-find #"(?is)Čtvrtek[ :]*(.+)Pátek.+" singleline-text))
      :friday (second (re-find #"(?is)Pátek[ :]*(.+)" singleline-text))}))
 
+
 (defn cleanup-lunch-rows [menu-hickory]
-  (-> menu-hickory
-      (->> (s/select (s/and (s/tag :p)))
-           (filter #(-> % :content first string?))
-           (map #(-> % :content first))
-           (remove #(re-matches #"^[  ]+$" %))
-           (remove #(re-matches #".*alergeny.*" %))
-           (remove #(re-matches #".*Změna jídelníčku.*" %))
-           (remove #(re-matches #"(?i).*STRAVA JE.*" %))
-           (remove #(re-matches #"^\n.+" %))
-           (map #(str/replace % " " ""))
-           (map #(str/replace % #"\d[0-9abcde, ]+$" ""))
-           (map #(str/replace % #"(svač.?:).+$" ""))
-           (map #(str/replace % #"(oběd:)" ""))
-           (map str/trim)
-           (remove #(= "" %)))))
+  (->> (s/select (s/tag :p) menu-hickory)
+       (map #(some-> % :content first))
+       (map #(if (map? %)
+               (some-> % :content first)
+               %))
+       (remove #(re-matches #"^[  ]+$" %))
+       (remove #(re-matches #".*alergeny.*" %))
+       (remove #(re-matches #".*Změna jídelníčku.*" %))
+       (remove #(re-matches #"(?i).*STRAVA JE.*" %))
+       (remove #(re-matches #"^\n.+" %))
+       (map #(str/replace % " " ""))
+       (map #(str/replace % #"\d[0-9abcde, ]+$" ""))
+       (map #(str/replace % #"(svač.?:).+$" ""))
+       (map #(str/replace % #"(oběd:)" ""))
+       (map str/trim)
+       (remove #(= "" %))))
+
+(comment
+  (cleanup-lunch-rows menu-hickory)
+  (extract-days (cleanup-lunch-rows menu-hickory)))
+
 
 (defn make-model! []
   (let [{:keys [menu-hickory]} (download-current-menu!)]
@@ -147,3 +157,12 @@
      [:div {:style {:text-align "right"
                     :padding-top "12pt"
                     :font-size "12pt"}} (current-datetime)]]))
+
+(comment
+  (render {:week-title "Jídelníček od 15.4. do 19.4.2024",
+           :days
+           {:monday "\npol.zeleninová snoky\nčočka se zakysanou smetanou,veka,čaj\n",
+            :tuesday "\noběd :pol.hráškové pyré\n",
+            :wednesday "\npol.jáhlová\nkuř.plátek na česneku s rýží,čaj\n",
+            :thursday "\npol.z vaječné jíšky\ntreska sbrokolicí,br.kaše,čaj\n",
+            :friday "\npol.kapustová\nšpagety po milánsku, sýr,čaj"}}))

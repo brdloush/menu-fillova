@@ -94,8 +94,7 @@
         page (render-page meal-menu-model
                           calendar-model
                           weather-model)]
+    (println "rendering page to" png-filename)
     (render-page-to-png! page
                          png-filename)
     nil))
-
-
