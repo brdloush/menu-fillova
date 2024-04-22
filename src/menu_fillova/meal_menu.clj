@@ -29,7 +29,7 @@
       (hickory/as-hickory)))
 
 (comment
-  (def menu-hickory (download-menu-hickory! (first menu-urls))))
+  (def menu-hickory (download-menu-hickory! (second menu-urls))))
 
 (defn extract-week-title-variant-1 [menu-hickory]
   (->> menu-hickory
@@ -50,12 +50,15 @@
   (or (extract-week-title-variant-1 menu-hickory)
       (extract-week-title-variant-2 menu-hickory)))
 
+(comment
+  (def week-title (extract-week-title menu-hickory)))
+
 (defn parse-czech-date [czech-date-str]
   (.parse (java.text.SimpleDateFormat. "d.M.yyyy")
           czech-date-str))
 
-(defn extract-until-date [menu-title]
-  (->> (re-find #" (\d+\.\d+\.\d{4})$" menu-title)
+(defn extract-until-date [week-title]
+  (->> (re-find #" (\d+\.\d+\.\d{4})$" week-title)
        second
        parse-czech-date))
 
@@ -89,6 +92,9 @@
                        parsed-menus))
         (first (sort-by (comp #(.getTime %) :until-date) > parsed-menus)))))
 
+(comment
+  (def current-menu (download-current-menu!)))
+
 (defn extract-days [cleaned-up-lunch-rows-strings]
   (let [singleline-text (->> cleaned-up-lunch-rows-strings
                              (interleave (repeat "\n"))
@@ -99,13 +105,13 @@
      :thursday (second (re-find #"(?is)Čtvrtek[ :]*(.+)Pátek.+" singleline-text))
      :friday (second (re-find #"(?is)Pátek[ :]*(.+)" singleline-text))}))
 
-
 (defn cleanup-lunch-rows [menu-hickory]
   (->> (s/select (s/tag :p) menu-hickory)
        (map #(some-> % :content first))
        (map #(if (map? %)
                (some-> % :content first)
                %))
+       (remove nil?)
        (remove #(re-matches #"^[  ]+$" %))
        (remove #(re-matches #".*alergeny.*" %))
        (remove #(re-matches #".*Změna jídelníčku.*" %))
