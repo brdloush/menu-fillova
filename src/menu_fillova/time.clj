@@ -25,3 +25,8 @@
   (let [dow (t/day-of-week zdt)
         czech-name (get czech-name-of-days dow)] 
     czech-name))
+
+(defn is-working-day? [zdt]
+  (not (#{DayOfWeek/SATURDAY
+          DayOfWeek/SUNDAY}
+         (t/day-of-week zdt))))

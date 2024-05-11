@@ -1,16 +1,19 @@
 (ns menu-fillova.meal-menu
-  (:require [babashka.curl :as curl]
-            [clojure.string :as str]
-            [hickory.core :as hickory]
-            [hickory.select :as s]
-            [menu-fillova.time :refer [format-czech-datetime prague-time!]])
-  (:import [java.time
-            DayOfWeek
-            LocalDate
-            LocalTime
-            ZoneId
-            ZoneOffset]
-           [java.util Date]))
+  (:require
+   [babashka.curl :as curl]
+   [clojure.string :as str]
+   [hickory.core :as hickory]
+   [hickory.select :as s]
+   [menu-fillova.time :refer [format-czech-datetime is-working-day?
+                              prague-time!]])
+  (:import
+   [java.time
+    DayOfWeek
+    LocalDate
+    LocalTime
+    ZoneId
+    ZoneOffset]
+   [java.util Date]))
 
 (def menu-urls ["https://www.ms-fillova.cz/jidelnicek1-stary"
                 "https://www.ms-fillova.cz/jidelnicek2-stary"])
@@ -74,7 +77,8 @@
      (-> now-ld (.with DayOfWeek/SUNDAY) (.atTime LocalTime/MAX) (.atZone (ZoneId/of "Europe/Prague")) .toInstant Date/from)]))
 
 (defn download-current-menu! []
-  (let [is-within-this-week (let [[week-start-inst week-end-inst] (current-week-inst-ranges!)]
+  (let [prague-time (prague-time!)
+        is-within-this-week (let [[week-start-inst week-end-inst] (current-week-inst-ranges!)]
                               (fn [inst]
                                 (is-inst-between? inst week-start-inst week-end-inst)))
         parsed-menus (->> (pmap
@@ -87,10 +91,13 @@
                                 :week-title week-title
                                 :until-date until-date}))
                            menu-urls))]
-    (or (first (filter (fn [{:keys [until-date]}]
-                         (is-within-this-week until-date))
-                       parsed-menus))
+    (or (when (is-working-day? prague-time)
+          (first (filter (fn [{:keys [until-date]}]
+                           (is-within-this-week until-date))
+                         parsed-menus)))
         (first (sort-by (comp #(.getTime %) :until-date) > parsed-menus)))))
+
+
 
 (comment
   (def current-menu (download-current-menu!)))
