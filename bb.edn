@@ -7,17 +7,17 @@
   download-weather-icons-zip
   (do (let [local-download-file-dir "target/weather-icons/zip"
             zip-file-name "weather-icons-master.zip"]
-        ;; (println "Downloading icons")
-        ;; (fs/delete-tree local-download-file-dir)
-        ;; (fs/create-dirs local-download-file-dir)
-        ;; (p/sh {:dir local-download-file-dir}
-        ;;       "wget" "https://codeload.github.com/erikflowers/weather-icons/zip/refs/heads/master")
-        ;; (println "Download finished")
-        ;; (println "Unzipping..")
-        ;; (fs/move (str local-download-file-dir "/master")
-        ;;          (str local-download-file-dir "/" zip-file-name))
-        ;; (p/sh {:dir local-download-file-dir}
-        ;;       "unzip" zip-file-name)
+         (println "Downloading icons")
+         (fs/delete-tree local-download-file-dir)
+         (fs/create-dirs local-download-file-dir)
+         (p/sh {:dir local-download-file-dir}
+               "wget" "https://codeload.github.com/erikflowers/weather-icons/zip/refs/heads/master")
+         (println "Download finished")
+         (println "Unzipping..")
+         (fs/move (str local-download-file-dir "/master")
+                  (str local-download-file-dir "/" zip-file-name))
+         (p/sh {:dir local-download-file-dir}
+               "unzip" zip-file-name)
         (let [svg-dir (str local-download-file-dir "/weather-icons-master/svg")]
           (fs/create-dirs (str "resources/weather-icons/png"))
           (->> (fs/list-dir svg-dir)
