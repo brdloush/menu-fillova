@@ -141,9 +141,9 @@
                     :text-align "center"}}
       (str (Math/round temperature_2m) "˚C")]]))
 
-(defn render [{:keys [parsed-predictions] :as _model}] 
+(defn render [{:keys [parsed-predictions] :as _model}]
   (let [plus-days 0
-        hours-offset (* plus-days 24)] 
+        hours-offset (* plus-days 24)]
     [:div {:style {:width "100%"}}
      (render-prediction (nth parsed-predictions (+ hours-offset 8)))
      (render-prediction (nth parsed-predictions (+ hours-offset 12)))

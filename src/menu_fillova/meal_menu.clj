@@ -97,8 +97,6 @@
                          parsed-menus)))
         (first (sort-by (comp #(.getTime %) :until-date) > parsed-menus)))))
 
-
-
 (comment
   (def current-menu (download-current-menu!)))
 
@@ -112,13 +110,43 @@
      :thursday (second (re-find #"(?is)Čtvrtek[ :]*(.+)Pátek.+" singleline-text))
      :friday (second (re-find #"(?is)Pátek[ :]*(.+)" singleline-text))}))
 
+(defn blank-or-nbsp-str? [s]
+  (when (string? s)
+    (or (str/blank? s)
+        (= " " s))))
+
+(comment
+  (blank-or-nbsp-str? " ")
+  ;; => true
+  )
+
+(defn blank-element? [e tag]
+  (and (map? e)
+       (= :element (:type e))
+       (or (nil? tag)
+           (= tag (:tag e)))
+       (every? #(or (blank-element? % nil)
+                    (blank-or-nbsp-str? %))
+               (:content e))))
+(comment
+  (blank-element? {:type :element, :attrs nil, :tag :strong, :content [" "]} :strong))
+
 (defn cleanup-lunch-rows [menu-hickory]
   (->> (s/select (s/tag :p) menu-hickory)
-       (map #(some-> % :content first))
-       (map #(if (map? %)
-               (some-> % :content first)
-               %))
+       (map (fn [p-el]
+              (some->> (:content p-el)
+                       (remove (fn [content]
+                                 (or (blank-or-nbsp-str? content)
+                                     (blank-element? content nil))))
+                       first)))
        (remove nil?)
+       (map (fn [e]
+              (if (map? e)
+                (first (:content e))
+                e)))
+       (remove nil?)
+       (remove #(re-matches #"^Úvod.*$" %))
+       (remove #(re-matches #"^Jídelníček.*$" %))
        (remove #(re-matches #"^[  ]+$" %))
        (remove #(re-matches #".*alergeny.*" %))
        (remove #(re-matches #".*Změna jídelníčku.*" %))
@@ -129,12 +157,15 @@
        (map #(str/replace % #"(svač.?:).+$" ""))
        (map #(str/replace % #"(oběd:)" ""))
        (map str/trim)
-       (remove #(= "" %))))
+       (remove #(= "" %)))
+  )
 
 (comment
+  (def menu-hickory (download-menu-hickory!))
   (cleanup-lunch-rows menu-hickory)
-  (extract-days (cleanup-lunch-rows menu-hickory)))
+  (extract-days (cleanup-lunch-rows menu-hickory))
 
+  )
 
 (defn make-model! []
   (let [{:keys [menu-hickory]} (download-current-menu!)]

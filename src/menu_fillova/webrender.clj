@@ -1,12 +1,11 @@
 (ns menu-fillova.webrender
   (:require [babashka.fs :as bfs])
-  
+
   (:import #_[java.awt Font]
-           [java.awt.image BufferedImage]
+   [java.awt.image BufferedImage]
            [java.io File]
            [javax.imageio ImageIO]
            [org.xhtmlrenderer.swing Java2DRenderer]))
-
 
 ;;  (def ttf-font-path "resources/fonts/weathericons-regular-webfont.ttf")
 ;;  (def font (java.awt.Font/createFont java.awt.Font/TRUETYPE_FONT (clojure.java.io/input-stream (clojure.java.io/file ttf-font-path))))

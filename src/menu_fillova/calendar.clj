@@ -1,7 +1,7 @@
 (ns menu-fillova.calendar
   (:require [clojure.string :as str]
             [menu-fillova.time :refer [czech-day-of-week format-czech-date
-                                       prague-time!]]) 
+                                       prague-time!]])
   (:import [java.time.format DateTimeFormatter]))
 
 (def namedays
@@ -365,9 +365,9 @@
    "12-30"  ["David"],
    "12-31"  ["Silvestr"]})
 
-(defn find-namedays [zdt] 
+(defn find-namedays [zdt]
   (let [lookup-key (.format (DateTimeFormatter/ofPattern "MM-dd")
-                            zdt)] 
+                            zdt)]
     (get namedays lookup-key)))
 
 (defn make-model! []
@@ -387,5 +387,5 @@
                       namedays-fragment]
                :as _model}]
   [:div {:style {:padding-left "24px"
-                 :padding-right "24px"}} 
+                 :padding-right "24px"}}
    [:div czech-day-name " " czech-formatted-date namedays-fragment]])
