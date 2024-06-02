@@ -39,16 +39,16 @@
 ;; server
 (defn handler [_req]
   {:status 404
-   #_#_:body (let [png-filename "/tmp/fillova.png"
-                   meal-menu-model (meal-menu/make-model!)
-                   calendar-model (calendar/make-model!)
-                   weather-model (weather/make-model!)
-                   page (render-page meal-menu-model
-                                     calendar-model
-                                     weather-model)]
-               (render-page-to-png! page
-                                    png-filename)
-               (io/file png-filename))})
+   :body (let [png-filename "/tmp/fillova.png"
+               meal-menu-model (meal-menu/make-model!)
+               calendar-model (calendar/make-model!)
+               weather-model (weather/make-model!)
+               page (render-page meal-menu-model
+                                 calendar-model
+                                 weather-model)]
+           (render-page-to-png! page
+                                png-filename)
+           (io/file png-filename))})
 
 (defonce server (atom nil))
 
