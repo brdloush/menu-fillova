@@ -39,6 +39,9 @@
        (s/select (s/tag :h1))
        first :content first :content first))
 
+(comment
+  (extract-week-title-variant-1 menu-hickory))
+
 (defn extract-week-title-variant-2 [menu-hickory]
   (-> (->> menu-hickory
            (s/select (s/class "huge-text"))
@@ -48,6 +51,9 @@
            (map first)
            (apply str))
       (str/replace " " "")))
+
+(comment
+  (extract-week-title-variant-1 menu-hickory))
 
 (defn extract-week-title [menu-hickory]
   (or (extract-week-title-variant-1 menu-hickory)
@@ -104,10 +110,10 @@
   (let [singleline-text (->> cleaned-up-lunch-rows-strings
                              (interleave (repeat "\n"))
                              (apply str))]
-    {:monday (second (re-find #"(?is)Pondělí[ :]*(.+)Úterý." singleline-text))
-     :tuesday (second (re-find #"(?is)Úterý[ :]*(.+)Středa.+" singleline-text))
-     :wednesday (second (re-find #"(?is)Středa[ :]*(.+)Čtvrtek.+" singleline-text))
-     :thursday (second (re-find #"(?is)Čtvrtek[ :]*(.+)Pátek.+" singleline-text))
+    {:monday (second (re-find #"(?is)Pondělí[ :]*(.+)Úterý.*" singleline-text))
+     :tuesday (second (re-find #"(?is)Úterý[ :]*(.+)Středa.*" singleline-text))
+     :wednesday (second (re-find #"(?is)Středa[ :]*(.+)Čtvrtek.*" singleline-text))
+     :thursday (second (re-find #"(?is)Čtvrtek[ :]*(.+)Pátek.*" singleline-text))
      :friday (second (re-find #"(?is)Pátek[ :]*(.+)" singleline-text))}))
 
 (defn blank-or-nbsp-str? [s]
@@ -157,15 +163,12 @@
        (map #(str/replace % #"(svač.?:).+$" ""))
        (map #(str/replace % #"(oběd:)" ""))
        (map str/trim)
-       (remove #(= "" %)))
-  )
+       (remove #(= "" %))))
 
 (comment
-  (def menu-hickory (download-menu-hickory!))
+  (def menu-hickory (:menu-hickory (download-current-menu!)))
   (cleanup-lunch-rows menu-hickory)
-  (extract-days (cleanup-lunch-rows menu-hickory))
-
-  )
+  (extract-days (cleanup-lunch-rows menu-hickory)))
 
 (defn make-model! []
   (let [{:keys [menu-hickory]} (download-current-menu!)]
