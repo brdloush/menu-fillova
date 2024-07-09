@@ -67,7 +67,7 @@
           czech-date-str))
 
 (defn extract-until-date [week-title]
-  (->> (re-find #" (\d+\.\d+\.\d{4})$" week-title)
+  (->> (re-find #"(\d+\.\d+\.\d{4})$" week-title)
        second
        parse-czech-date))
 
