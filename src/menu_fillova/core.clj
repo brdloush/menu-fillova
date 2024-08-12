@@ -24,7 +24,8 @@
      [:div#meal-menu {:style {:padding "24pt"
                               :height "530px"
                               :overflow "hidden"}}
-      (meal-menu/render meal-menu-model)]
+      (when meal-menu-model
+        (meal-menu/render meal-menu-model))]
      [:div#calendar
       (calendar/render calendar-model)]
      [:div#weather
@@ -37,10 +38,11 @@
     (wr/render-html-to-png! html png-filename width height)))
 
 ;; server
+
 (defn handler [_req]
   {:status 404
    :body (let [png-filename "/tmp/fillova.png"
-               meal-menu-model (meal-menu/make-model!)
+               meal-menu-model #_(meal-menu/make-model!) nil
                calendar-model (calendar/make-model!)
                weather-model (weather/make-model!)
                page (render-page meal-menu-model
@@ -82,9 +84,9 @@
   (deref (promise)))
 
 ;; dev
-(def memoized-meal-menu-make-model (memoize meal-menu/make-model!))
-(def memoized-calendar-make-model (memoize calendar/make-model!))
-(def memoized-weather-make-model (memoize weather/make-model!))
+;;(defonce memoized-meal-menu-make-model (memoize meal-menu/make-model!))
+(defonce memoized-calendar-make-model (memoize calendar/make-model!))
+(defonce memoized-weather-make-model (memoize weather/make-model!))
 
 (defn time! []
   (str (java.time.LocalDateTime/now)))
@@ -92,7 +94,7 @@
 #_{:clj-kondo/ignore [:clojure-lsp/unused-public-var]}
 (defn go []
   (let [png-filename "/tmp/fillova.png"
-        meal-menu-model (memoized-meal-menu-make-model)
+        meal-menu-model #_(memoized-meal-menu-make-model) nil
         calendar-model (memoized-calendar-make-model)
         weather-model (memoized-weather-make-model)
         page (render-page meal-menu-model
