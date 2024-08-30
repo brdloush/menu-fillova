@@ -110,6 +110,5 @@
 
 (comment
   (start-server 8080)
-  (stop-server))
-
-(go)
+  (stop-server)
+  (go))
