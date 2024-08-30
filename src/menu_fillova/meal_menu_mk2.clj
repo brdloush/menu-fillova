@@ -85,7 +85,7 @@
          (map (fn [[week-headings week-lines]]
                 (let [week-str (extract-week (first week-headings))
                       week-end-inst (extract-week-end-inst week-str)]
-                  {:week week-str
+                  {:week-title week-str
                    :week-finish-inst week-end-inst
                    :is-in-past (is-day-before-today! week-end-inst)
                    :is-current-week (is-inst-between? week-end-inst current-week-start-inst current-week-end-inst)
@@ -109,12 +109,19 @@
        [:center week-title]]
       [:hr {:style {:border "1px dotted black"}}]
       [:div
-       (map (fn [day]
+       (map (fn [{:keys [day meal-lines] :as _day}]
               [:div
                [:div {:style {:font-size "20pt"
                               :padding-top "16pt"
-                              :font-weight 800}}]
-               day])
+                              :font-weight 800}}
+                day]
+               (map (fn [meal-line]
+                      [:div {:style {:font-size "16pt"
+                                     :font-weight 100
+                                     :padding-top "4pt"}}
+                       meal-line])
+                 meal-lines)
+               ])
             days)]]
      [:div {:style {:text-align "right"
                     :padding-top "12pt"
