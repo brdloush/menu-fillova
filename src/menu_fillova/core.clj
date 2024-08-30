@@ -5,7 +5,7 @@
    [hiccup2.core :as h]
    [menu-fillova.calendar :as calendar]
    [menu-fillova.css :as css]
-   [menu-fillova.meal-menu :as meal-menu]
+   [menu-fillova.meal-menu-mk2 :as meal-menu]
    [menu-fillova.weather :as weather]
    [menu-fillova.webrender :as wr]
    [org.httpkit.server :as http]))
@@ -42,7 +42,7 @@
 (defn handler [_req]
   {:status 404
    :body (let [png-filename "/tmp/fillova.png"
-               meal-menu-model #_(meal-menu/make-model!) nil
+               meal-menu-model (meal-menu/make-model!)
                calendar-model (calendar/make-model!)
                weather-model (weather/make-model!)
                page (render-page meal-menu-model
@@ -84,7 +84,7 @@
   (deref (promise)))
 
 ;; dev
-;;(defonce memoized-meal-menu-make-model (memoize meal-menu/make-model!))
+(defonce memoized-meal-menu-make-model (memoize meal-menu/make-model!))
 (defonce memoized-calendar-make-model (memoize calendar/make-model!))
 (defonce memoized-weather-make-model (memoize weather/make-model!))
 
@@ -94,7 +94,7 @@
 #_{:clj-kondo/ignore [:clojure-lsp/unused-public-var]}
 (defn go []
   (let [png-filename "/tmp/fillova.png"
-        meal-menu-model #_(memoized-meal-menu-make-model) nil
+        meal-menu-model (memoized-meal-menu-make-model)
         calendar-model (memoized-calendar-make-model)
         weather-model (memoized-weather-make-model)
         page (render-page meal-menu-model
@@ -111,3 +111,5 @@
 (comment
   (start-server 8080)
   (stop-server))
+
+(go)
