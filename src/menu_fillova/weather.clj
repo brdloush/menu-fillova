@@ -4,7 +4,7 @@
             [menu-fillova.weather :as weather])
   (:import [java.lang Math]))
 
-(defn download-prediction []
+(defn download-prediction! []
   (json/parse-string
    (slurp
     "https://api.open-meteo.com/v1/forecast?latitude=50.088&longitude=14.4208&hourly=temperature_2m,relative_humidity_2m,precipitation_probability,precipitation,weather_code,wind_speed_10m&timezone=Europe%2FBerlin&forecast_days=2")
@@ -35,7 +35,7 @@
           (-> hourly :wind_speed_10m))))
 
 (defn make-model! []
-  (let [predictions-response (download-prediction)]
+  (let [predictions-response (download-prediction!)]
     {:parsed-predictions (parse-prediction-response predictions-response)}))
 
 (def weather-codes-mapping

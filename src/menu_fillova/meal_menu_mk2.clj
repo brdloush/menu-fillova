@@ -1,5 +1,6 @@
 (ns menu-fillova.meal-menu-mk2
   (:require
+   [babashka.fs :as fs]
    [clojure.java.io :as io]
    [clojure.string :as str]
    [org.httpkit.client :as http]
@@ -16,16 +17,30 @@
     ZoneOffset]
    [java.util Date]))
 
-(def meal-menu-url "https://www.msrysanka.cz/phocadownload/userupload/dba5230469/jidelnicek.pdf?wmode=transparent")
+(def ^:private new-value
+  "https://www.msrysanka.cz/jidelnicek")
+
+(defn get-meal-menu-url! []
+  (re-find #"https://.+\.pdf" (slurp new-value)))
 
 (defn download-meal-menu-txt! [url]
-  (let [response @(http/get url)
-        temp-file (java.io.File/createTempFile "fillova-menu" ".pdf")]
-    (with-open [input-stream (:body response)
-                output-stream (io/output-stream temp-file)]
-      (io/copy input-stream output-stream)
-      (.flush output-stream)
-      (text/extract temp-file))))
+  (when-let [response @(http/get url)]
+    (let [temp-file (java.io.File/createTempFile "fillova-menu" ".pdf")]
+      (with-open [input-stream (:body response)
+                  output-stream (io/output-stream temp-file)]
+        (try
+          (io/copy input-stream output-stream)
+          (.flush output-stream)
+          (-> (text/extract temp-file)
+              (str/trim)
+              (str/replace #" +" " ")
+              (str/replace "–" "-"))
+
+          (finally
+            (fs/delete-if-exists temp-file)))))))
+
+(comment
+  (download-meal-menu-txt! (get-meal-menu-url!)))
 
 (defn extract-week [s]
   (when s
@@ -120,9 +135,11 @@
                                      :font-weight 100
                                      :padding-top "4pt"}}
                        meal-line])
-                 meal-lines)
-               ])
+                    meal-lines)])
             days)]]
      [:div {:style {:text-align "right"
                     :padding-top "12pt"
                     :font-size "12pt"}} (current-datetime)]]))
+
+(comment
+  (make-model!))
