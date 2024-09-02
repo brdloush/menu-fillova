@@ -40,7 +40,7 @@
 ;; server
 
 (defn handler [_req]
-  {:status 404
+  {:status 200
    :body (let [png-filename "/tmp/fillova.png"
                meal-menu-model (meal-menu/make-model!)
                calendar-model (calendar/make-model!)
