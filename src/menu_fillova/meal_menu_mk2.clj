@@ -17,11 +17,11 @@
     ZoneOffset]
    [java.util Date]))
 
-(def ^:private new-value
+(def ^:private msrysanka-meal-menu-page-url
   "https://www.msrysanka.cz/jidelnicek")
 
 (defn get-meal-menu-url! []
-  (re-find #"https://.+\.pdf" (slurp new-value)))
+  (re-find #"https://.+\.pdf" (slurp msrysanka-meal-menu-page-url)))
 
 (defn download-meal-menu-txt! [url]
   (when-let [response @(http/get url)]
