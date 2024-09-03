@@ -1,5 +1,6 @@
 (ns menu-fillova.webrender
-  (:require [babashka.fs :as bfs])
+  (:require [babashka.fs :as bfs]
+            [hiccup2.core :as h])
 
   (:import [java.awt.image BufferedImage]
            [java.io File]
@@ -22,3 +23,9 @@
     (bfs/move output-tmp-file-path png-filename {:replace-existing true})
     (bfs/delete-if-exists input-tmp-file-path)
     (bfs/delete-if-exists output-tmp-file-path)))
+
+(defn render-hiccup-to-png! [page-hiccup png-filename]
+  (let [width 600
+        height 800
+        html (str (h/html page-hiccup))]
+    (render-html-to-png! html png-filename width height)))
