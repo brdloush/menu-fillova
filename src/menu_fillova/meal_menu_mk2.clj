@@ -107,7 +107,7 @@
                    :days (extract-days week-lines)}))))))
 
 (defn make-model! []
-  (let [pdf-text (download-meal-menu-txt! meal-menu-url)]
+  (let [pdf-text (download-meal-menu-txt! (get-meal-menu-url!))]
     (->> (parse-model pdf-text)
          (remove #(:is-in-past %))
          first)))
