@@ -1,7 +1,6 @@
 (ns menu-fillova.weather
   (:require [babashka.fs :as fs]
-            [cheshire.core :as json]
-            [menu-fillova.weather :as weather])
+            [cheshire.core :as json])
   (:import [java.lang Math]))
 
 (defn download-prediction! []
