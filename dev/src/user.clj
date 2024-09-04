@@ -35,7 +35,7 @@
     nil))
 
 (comment
-  (require '[clojure.core.server :refer [start-server stop-server]])
+  (require '[menu-fillova.server :refer [start-server stop-server]])
   (start-server 8080)
   (stop-server)
   (go))
