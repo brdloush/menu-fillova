@@ -2,7 +2,7 @@
   (:require
    [menu-fillova.calendar :as calendar]
    [menu-fillova.meal-menu-mk2 :as meal-menu]
-   [menu-fillova.server :refer [render-page]]
+   [menu-fillova.server :refer [render-page start-server stop-server]]
    [menu-fillova.weather :as weather]
    [menu-fillova.webrender :refer [render-hiccup-to-png!]]))
 
@@ -35,7 +35,6 @@
     nil))
 
 (comment
-  (require '[menu-fillova.server :refer [start-server stop-server]])
   (start-server 8080)
   (stop-server)
   (go))
