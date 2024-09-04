@@ -124,19 +124,17 @@
        [:center week-title]]
       [:hr {:style {:border "1px dotted black"}}]
       [:div
-       (map (fn [{:keys [day meal-lines] :as _day}]
-              [:div
-               [:div {:style {:font-size "20pt"
-                              :padding-top "16pt"
-                              :font-weight 800}}
-                day]
-               (map (fn [meal-line]
-                      [:div {:style {:font-size "16pt"
-                                     :font-weight 100
-                                     :padding-top "4pt"}}
-                       meal-line])
-                    meal-lines)])
-            days)]]
+       (for [{:keys [day meal-lines]} days]
+         [:div
+          [:div {:style {:font-size "20pt"
+                         :padding-top "16pt"
+                         :font-weight 800}}
+           day]
+          (for [meal-line meal-lines]
+            [:div {:style {:font-size "16pt"
+                           :font-weight 100
+                           :padding-top "4pt"}}
+             meal-line])])]]
      [:div {:style {:text-align "right"
                     :padding-top "12pt"
                     :font-size "12pt"}} (current-datetime)]]))
