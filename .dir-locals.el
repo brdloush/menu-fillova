@@ -1,9 +1,9 @@
-((nil .
+((clojure-mode .
 
        ((eval .
               (progn
 
-                (message "running .dir-locals.el 12345")
+                (message "running .dir-locals.el")
                 (setq cider-clojure-cli-global-options "-A:dev:test")
               
                 (defun custom-eval-user-go ()
