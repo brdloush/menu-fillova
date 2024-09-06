@@ -9,10 +9,9 @@
 (println "starting user ns")
 
 ;; dev
-(defonce memoized-meal-menu-make-model (memoize meal-menu/make-model!))
-(defonce memoized-calendar-make-model (memoize calendar/make-model!))
-(defonce memoized-weather-make-model (memoize weather/make-model!))
-
+(def memoized-meal-menu-make-model (memoize meal-menu/make-model!))
+(def memoized-calendar-make-model (memoize calendar/make-model!))
+(def memoized-weather-make-model (memoize weather/make-model!))
 
 (defn time! []
   (str (java.time.LocalDateTime/now)))

@@ -6,11 +6,11 @@
    [org.httpkit.client :as http]
    [pdfboxing.text :as text]
    [menu-fillova.time :refer [format-czech-datetime
-                              prague-time!]])
+                              prague-time!]]
+   [tick.core :as t])
   (:import
    [java.time
     DayOfWeek
-    Instant
     LocalDate
     LocalTime
     ZoneId
@@ -40,7 +40,7 @@
             (fs/delete-if-exists temp-file)))))))
 
 (comment
-  (download-meal-menu-txt! (get-meal-menu-url!)))
+  (def meal-menu-text (download-meal-menu-txt! (get-meal-menu-url!))))
 
 (defn extract-week [s]
   (when s
@@ -53,6 +53,7 @@
 (defn extract-days [week-lines]
   (->> week-lines
        (remove #(re-find #"Přesnídávka|Svačina|seznam-alergenu" %)) ;; we're only interested in Polévka and Jídlo lines
+       (remove #(re-find #"^Paní kuchařky" %)) ;; we're only interested in Polévka and Jídlo lines
        (map #(str/replace % #"alergeny:" "")) ;; get rid of alergens title label
        (map str/trim)
        (map #(str/replace % #"\s[0-9,]+$" "")) ;; get rid of trailing alergens info on each meal line
@@ -86,9 +87,7 @@
 
 (defn is-day-before-today! [some-inst]
   (when some-inst
-    (let [today-start-day-ldt (-> (LocalDate/ofInstant (Instant/now) ZoneOffset/UTC) .atStartOfDay)
-          evaluated-ldt (-> (LocalDate/ofInstant some-inst ZoneOffset/UTC) .atStartOfDay)]
-      (.isBefore evaluated-ldt today-start-day-ldt))))
+    (t/< (t/date some-inst) (t/date))))
 
 (defn parse-model [pdf-text]
   (let [[current-week-start-inst current-week-end-inst] (current-week-inst-ranges!)]
@@ -105,6 +104,9 @@
                    :is-in-past (is-day-before-today! week-end-inst)
                    :is-current-week (is-inst-between? week-end-inst current-week-start-inst current-week-end-inst)
                    :days (extract-days week-lines)}))))))
+
+(comment
+  (parse-model meal-menu-text))
 
 (defn make-model! []
   (let [pdf-text (download-meal-menu-txt! (get-meal-menu-url!))]
