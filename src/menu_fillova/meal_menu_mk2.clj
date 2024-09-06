@@ -53,7 +53,7 @@
 (defn extract-days [week-lines]
   (->> week-lines
        (remove #(re-find #"Přesnídávka|Svačina|seznam-alergenu" %)) ;; we're only interested in Polévka and Jídlo lines
-       (remove #(re-find #"^Paní kuchařky" %)) ;; we're only interested in Polévka and Jídlo lines
+       (remove #(re-find #"^Paní kuchařky" %)) ;; Not interested in lines with staff names
        (map #(str/replace % #"alergeny:" "")) ;; get rid of alergens title label
        (map str/trim)
        (map #(str/replace % #"\s[0-9,]+$" "")) ;; get rid of trailing alergens info on each meal line
@@ -142,4 +142,5 @@
                     :font-size "12pt"}} (current-datetime)]]))
 
 (comment
+
   (make-model!))
