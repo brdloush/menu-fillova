@@ -64,7 +64,7 @@
        (map (fn [[day-lines meal-lines]]
               {:day (first day-lines)
                :meal-lines (->> meal-lines
-                                (map #(str/replace % #"Polévka:\s+|Jídlo:\s+" "")))}))))
+                                (map #(str/replace % #"Polévka:\s+|Jídlo:\s+|Oběd:\s+" "")))}))))
 (defn parse-czech-date-inst [czech-date-str]
   (when czech-date-str
     (.toInstant (.parse (java.text.SimpleDateFormat. "d.M.yyyy")
