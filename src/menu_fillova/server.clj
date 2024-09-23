@@ -24,7 +24,7 @@
         (meal-menu/render meal-menu-model))]
      [:div#calendar
       (calendar/render calendar-model)]
-     [:div#weather
+     [:div#weather {:style {:padding-top "16px"}}
       (weather/render weather-model)]]]])
 
 
