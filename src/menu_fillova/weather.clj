@@ -126,11 +126,12 @@
          [:div {:style {:background-color "#FFF"
                         :float "left"
                         :width "200px"}}
-          [:div {:style {:height "72px"}}
+          [:div
            [:center
             [:img {:src weather-icon-png
-                   :style {:background-color "#FFF"}
-                   :width "58px"}]]]
+                   :style {:background-color "#FFF"
+                           :padding "2px"}
+                   :width "64px"}]]]
           [:div {:style {:font-size "18pt"
                          :padding "4pt 14pt"
                          :text-align "center"}}
