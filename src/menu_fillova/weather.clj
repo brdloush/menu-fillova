@@ -6,7 +6,7 @@
 (defn download-prediction! []
   (json/parse-string
    (slurp
-    "https://api.open-meteo.com/v1/forecast?latitude=50.088&longitude=14.4208&hourly=temperature_2m,relative_humidity_2m,precipitation_probability,precipitation,weather_code,wind_speed_10m&timezone=Europe%2FBerlin&forecast_days=2")
+    "https://api.open-meteo.com/v1/forecast?latitude=50.088&longitude=14.4208&hourly=temperature_2m,relative_humidity_2m,precipitation_probability,precipitation,weather_code,wind_speed_10m,wind_direction_10m&timezone=Europe%2FBerlin&forecast_days=2")
    true))
 
 (defn parse-prediction-response [preciption-response]
@@ -17,21 +17,24 @@
                precipitation_probability
                precipitation
                weather_code
-               wind_speed_10m]
+               wind_speed_10m
+               wind_direction_10m]
             {:time time
              :temperature_2m temperature_2m
              :relative_humidity_2m relative_humidity_2m
              :precipitation_probability precipitation_probability
              :precipitation precipitation
              :weather_code weather_code
-             :wind_speed_10m wind_speed_10m})
+             :wind_speed_10m wind_speed_10m
+             :wind_direction_10m wind_direction_10m})
           (-> hourly :time)
           (-> hourly :temperature_2m)
           (-> hourly :relative_humidity_2m)
           (-> hourly :precipitation_probability)
           (-> hourly :precipitation)
           (-> hourly :weather_code)
-          (-> hourly :wind_speed_10m))))
+          (-> hourly :wind_speed_10m)
+          (-> hourly :wind_direction_10m))))
 
 (defn make-model! []
   (let [predictions-response (download-prediction!)]
@@ -110,35 +113,36 @@
 (defn weather-icon-url [filename]
   (str "file://" (resources-dir-location) "/weather-icons/png/" filename))
 
-(defn render-prediction [{:keys [time
-                                 weather_code
-                                 temperature_2m
-                                 _precipitation
-                                 _precipitation_probability
-                                 _wind_speed_10m] :as _prediction}]
-  (let [weather-icon-png (weather-icon-url (weather-code->png-image weather_code))
-        _raindrop-icon-png (weather-icon-url "wi-raindrops.png")
-        weather-description (get-weather-description weather_code)]
-    [:div {:style {:background-color "#FFF"
-                   :float "left"
-                   :width "200px"}}
-     [:div {:style {:height "72px"}}
-      [:center
-       [:img {:src weather-icon-png
-              :style {:background-color "#FFF"}
-              :width "72px"}]]]
-     [:div {:style {:font-size "18pt"
-                    :padding "2pt 16pt"
-                    :text-align "center"}}
-      (second (re-find #"T(.+)$" time))]
-     [:div {:style {:font-size "18pt"
-                    :padding "8pt 16pt"
-                    :text-align "center"}}
-      weather-description]
-     [:div {:style {:font-size "18pt"
-                    :padding "4pt 16pt"
-                    :text-align "center"}}
-      (str (Math/round temperature_2m) "˚C")]]))
+(defn render-prediction [{:keys [_time
+                                      weather_code
+                                      temperature_2m
+                                      _precipitation
+                                      _precipitation_probability
+                                      wind_speed_10m
+                                      wind_direction_10m] :as _prediction}]
+       (let [weather-icon-png (weather-icon-url (weather-code->png-image weather_code))
+             _raindrop-icon-png (weather-icon-url "wi-raindrops.png")
+             weather-description (get-weather-description weather_code)]
+         [:div {:style {:background-color "#FFF"
+                        :float "left"
+                        :width "200px"}}
+          [:div {:style {:height "72px"}}
+           [:center
+            [:img {:src weather-icon-png
+                   :style {:background-color "#FFF"}
+                   :width "58px"}]]]
+          [:div {:style {:font-size "18pt"
+                         :padding "4pt 14pt"
+                         :text-align "center"}}
+           weather-description]
+          [:div {:style {:font-size "18pt"
+                         :padding "4pt 8pt"
+                         :text-align "center"}}
+           [:strong (str (Math/round temperature_2m) "˚C")]]
+          [:div {:style {:font-size "14pt"
+                         :padding "4pt 16pt"
+                         :text-align "center"}}
+           (str (Math/round wind_speed_10m) " m/s, " wind_direction_10m "°")]]))
 
 (defn render [{:keys [parsed-predictions] :as _model}]
   (let [plus-days 0
