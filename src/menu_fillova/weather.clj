@@ -113,37 +113,41 @@
 (defn weather-icon-url [filename]
   (str "file://" (resources-dir-location) "/weather-icons/png/" filename))
 
+(defn kmph->ms [kmph]
+  (when kmph
+    (/ kmph 3.6)))
+
 (defn render-prediction [{:keys [_time
-                                      weather_code
-                                      temperature_2m
-                                      _precipitation
-                                      _precipitation_probability
-                                      wind_speed_10m
-                                      wind_direction_10m] :as _prediction}]
-       (let [weather-icon-png (weather-icon-url (weather-code->png-image weather_code))
-             _raindrop-icon-png (weather-icon-url "wi-raindrops.png")
-             weather-description (get-weather-description weather_code)]
-         [:div {:style {:background-color "#FFF"
-                        :float "left"
-                        :width "200px"}}
-          [:div
-           [:center
-            [:img {:src weather-icon-png
-                   :style {:background-color "#FFF"
-                           :padding "2px"}
-                   :width "64px"}]]]
-          [:div {:style {:font-size "18pt"
-                         :padding "4pt 14pt"
-                         :text-align "center"}}
-           weather-description]
-          [:div {:style {:font-size "18pt"
-                         :padding "4pt 8pt"
-                         :text-align "center"}}
-           [:strong (str (Math/round temperature_2m) "˚C")]]
-          [:div {:style {:font-size "14pt"
-                         :padding "4pt 16pt"
-                         :text-align "center"}}
-           (str (Math/round wind_speed_10m) " m/s, " wind_direction_10m "°")]]))
+                                 weather_code
+                                 temperature_2m
+                                 _precipitation
+                                 _precipitation_probability
+                                 wind_speed_10m
+                                 wind_direction_10m] :as _prediction}]
+  (let [weather-icon-png (weather-icon-url (weather-code->png-image weather_code))
+        _raindrop-icon-png (weather-icon-url "wi-raindrops.png")
+        weather-description (get-weather-description weather_code)]
+    [:div {:style {:background-color "#FFF"
+                   :float "left"
+                   :width "200px"}}
+     [:div
+      [:center
+       [:img {:src weather-icon-png
+              :style {:background-color "#FFF"
+                      :padding "2px"}
+              :width "64px"}]]]
+     [:div {:style {:font-size "18pt"
+                    :padding "4pt 14pt"
+                    :text-align "center"}}
+      weather-description]
+     [:div {:style {:font-size "18pt"
+                    :padding "4pt 8pt"
+                    :text-align "center"}}
+      [:strong (str (Math/round temperature_2m) "˚C")]]
+     [:div {:style {:font-size "14pt"
+                    :padding "4pt 16pt"
+                    :text-align "center"}}
+      (str (Math/round (kmph->ms wind_speed_10m)) " m/s, " wind_direction_10m "°")]]))
 
 (defn render [{:keys [parsed-predictions] :as _model}]
   (let [plus-days 0
