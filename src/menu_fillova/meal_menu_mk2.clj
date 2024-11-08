@@ -54,6 +54,7 @@
   (->> week-lines
        (remove #(re-find #"Přesnídávka|Svačina|seznam-alergenu" %)) ;; we're only interested in Polévka and Jídlo lines
        (remove #(re-find #"^Paní kuchařky" %)) ;; Not interested in lines with staff names
+       (remove #(re-find #"VEDOUCÍ" %)) ;; Not interested in lines with staff names
        (map #(str/replace % #"alergeny:" "")) ;; get rid of alergens title label
        (map str/trim)
        (map #(str/replace % #"\s[0-9,]+$" "")) ;; get rid of trailing alergens info on each meal line
