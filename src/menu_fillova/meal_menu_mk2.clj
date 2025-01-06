@@ -25,19 +25,20 @@
 
 (defn download-meal-menu-txt! [url]
   (when-let [response @(http/get url)]
-    (let [temp-file (java.io.File/createTempFile "fillova-menu" ".pdf")]
-      (with-open [input-stream (:body response)
-                  output-stream (io/output-stream temp-file)]
-        (try
-          (io/copy input-stream output-stream)
-          (.flush output-stream)
-          (-> (text/extract temp-file)
-              (str/trim)
-              (str/replace #" +" " ")
-              (str/replace "–" "-"))
+    (when (= 200 (:status response))
+      (let [temp-file (java.io.File/createTempFile "fillova-menu" ".pdf")]
+        (with-open [input-stream (:body response)
+                    output-stream (io/output-stream temp-file)]
+          (try
+            (io/copy input-stream output-stream)
+            (.flush output-stream)
+            (-> (text/extract temp-file)
+                (str/trim)
+                (str/replace #" +" " ")
+                (str/replace "–" "-"))
 
-          (finally
-            (fs/delete-if-exists temp-file)))))))
+            (finally
+              (fs/delete-if-exists temp-file))))))))
 
 (comment
   (def meal-menu-text (download-meal-menu-txt! (get-meal-menu-url!))))
