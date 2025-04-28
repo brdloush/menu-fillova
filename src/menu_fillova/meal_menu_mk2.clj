@@ -51,11 +51,14 @@
             (str/replace "-" " - ")
             (str/replace "–" " - "))))
 
+(comment
+  (extract-week meal-menu-text))
+
 (defn extract-days [week-lines]
   (->> week-lines
        (remove #(re-find #"Přesnídávka|Svačina|seznam-alergenu" %)) ;; we're only interested in Polévka and Jídlo lines
        (remove #(re-find #"^Paní kuchařky" %)) ;; Not interested in lines with staff names
-       (remove #(re-find #"VEDOUCÍ" %)) ;; Not interested in lines with staff names
+       (remove #(re-find #"Vedoucí" %)) ;; Not interested in lines with staff names
        (map #(str/replace % #"alergeny:" "")) ;; get rid of alergens title label
        (map str/trim)
        (map #(str/replace % #"\s[0-9,]+$" "")) ;; get rid of trailing alergens info on each meal line
@@ -99,10 +102,12 @@
                          (re-find #"^\s*JÍDELNÍČEK" line)))
          (partition 2)
          (map (fn [[week-headings week-lines]]
-                (let [week-str (extract-week (first week-headings))
+                (let [week-heading (first week-headings)
+                      week-str (extract-week week-heading)
                       week-end-inst (extract-week-end-inst week-str)]
                   {:week-title week-str
                    :week-finish-inst week-end-inst
+                   :is-fillova (str/includes? (str/upper-case week-heading) "FILLOVA")
                    :is-in-past (is-day-before-today! week-end-inst)
                    :is-current-week (is-inst-between? week-end-inst current-week-start-inst current-week-end-inst)
                    :days (extract-days week-lines)}))))))
@@ -113,7 +118,9 @@
 (defn make-model! []
   (when-let [pdf-text (download-meal-menu-txt! (get-meal-menu-url!))]
     (->> (parse-model pdf-text)
-         (remove #(:is-in-past %))
+         (remove (fn [{:keys [is-in-past is-fillova]}]
+                   (or is-in-past
+                       (not is-fillova))))
          first)))
 
 (defn current-datetime []
