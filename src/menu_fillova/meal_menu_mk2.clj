@@ -76,8 +76,10 @@
                         czech-date-str))))
 
 (defn extract-week-end-inst [s]
-  (when s
-    (parse-czech-date-inst (re-find #"[0-9.]+$" s))))
+  (let [replaced-s (-> s
+                       (str/replace "1.82025" "1.8.2025"))]
+    (when replaced-s
+      (parse-czech-date-inst (re-find #"[0-9.]+$" replaced-s)))))
 
 (defn is-inst-between? [inst low-inst high-inst]
   (->> [low-inst inst high-inst]
