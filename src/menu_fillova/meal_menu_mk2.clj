@@ -109,7 +109,7 @@
                       week-end-inst (extract-week-end-inst week-str)]
                   {:week-title week-str
                    :week-finish-inst week-end-inst
-                   :is-fillova (str/includes? (str/upper-case week-heading) "FILLOVA")
+                   :is-fillova (not (str/includes? (str/upper-case week-heading) "RYŠÁNKA"))
                    :is-in-past (is-day-before-today! week-end-inst)
                    :is-current-week (is-inst-between? week-end-inst current-week-start-inst current-week-end-inst)
                    :days (extract-days week-lines)}))))))
